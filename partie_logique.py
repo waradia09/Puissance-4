@@ -4,6 +4,7 @@ ___DATE___ = "18/08/2020"
 
 # Importation de modules
 from render_connect4 import *
+import random
 
 # Constantes
 
@@ -132,7 +133,7 @@ def is_valide_column(c:int, grid:list)->bool:
 		:return: (bool)
 			- True if the column is valid
 			- False if not
-		:CU: 0 <= c < nc(g)
+		:CU: None
 
 		Exemple
         >>> g = [[2,0,0,0],[1,0,0,2],[1,0,2,1]]
@@ -143,7 +144,8 @@ def is_valide_column(c:int, grid:list)->bool:
         >>> is_valide_column(0, g)
         False
 	"""
-	assert 0 <= c < nc(grid)
+	if not 0 <= c < nc(grid):
+		return False
 	# create a liste of case of the column
 	column = [ligne[c] for ligne in grid]
 	# if the column is full, we won't find a 0 in. Otherwise, we'll
@@ -200,12 +202,12 @@ def modify_grid(g:list, p:str, c:int)->None:
 	line = line_fall_disc(c, g)
 	g[line][c] = p
 
-def play_one_step(player:int, grid:list)->None:
+def play_one_step(player:int, grid:list, c)->int:
 	"""
 		Allow to a player to play one step
 	"""
-	column = enter_column(player, grid)
-	modify_grid(grid, player, column)
+	modify_grid(grid, player, c)
+	 
 
 ## 2.3  Jeu à 2 joueurs
 """
@@ -213,21 +215,38 @@ For the game with 2 players, just repeat the steps 2.2 'play one step' and 2.1 '
 For each iteration, we change the player (from player 1 to player 2 or conversely)
 """
 
-def play(player1, player2, grid):
+def play(p1, p2, grid, is_ia_player1=False, is_ia_player2=False):
 	"""
 		run the gam beatween two humains players
+		:param p1: (int) Player 1
+		:param p2: (int) Player 2
+		:param grid: (list) a grid
+		:param is_ia_player1: (bool) determin if p1 is ia or human.
+		:param is_ia_player2: (bool) determin if p2 is ia or human.
 	"""
+	is_ia = {1:is_ia_player1, 2:is_ia_player2}
+	game_over = False
 	has_played_player1 = False
-	while True:
+	while not game_over:
 		if not has_played_player1:
-			play_one_step(player1, grid)
+			player = p1
 		elif has_played_player1:
-			play_one_step(player2, grid)
+			player = p2
+
+		# if player is an IA, the computer will choose the column
+		if is_ia[player]:
+			c = is_alea(grid)
+		else:
+			c = enter_column(player, grid)
+		r = line_fall_disc(c, grid)
+		play_one_step(player, grid, c)
+		game_over = is_win(grid, r, c, player)
+
 		
 		#show_grid(grid) # Affichage dans la console
 		draw_connect4(grid) # Affichage graphique
-
 		has_played_player1 = not has_played_player1 # permet d'alterner le tour entre les deux joueurs
+	print("Player{} is the winner".format(player))
 
 
 # 2.5 Winner
@@ -332,22 +351,60 @@ def is_win(g:list, r:int, c:int, p:int)->bool:
 	"""
 
 	# list of horizontal cases
-	lc_horiz = [(r, c-3), (r, c-2), (r, c-1), (r, c), (r, c+1), (r, c+2), (r, c+3)]
+	lc_horiz = [(r, c-3), (r, c-2),
+			    (r, c-1), (r, c), (r, c+1), (r, c+2), (r, c+3)]
 	
  	# lists of vertical cases
-	lc_diag1 = [(r-3, c-3), (r-2, c-2), (r-1, c-1), (r, c), (r + 1, c+1), (r+2, c+2), (r+3, c+3)]
-	lc_diag2 = [(r-3, c+3), (r-2, c+2), (r-1, c+1), (r, c), (r+1, c-1), (r+2, c-2), (r+3, c-3)]
+	lc_diag1 = [(r-3, c-3), (r-2, c-2),
+			    (r-1, c-1), (r, c), 
+			    (r + 1, c+1), (r+2, c+2), (r+3, c+3)]
+
+	lc_diag2 = [(r-3, c+3), (r-2, c+2),
+			    (r-1, c+1), (r, c), (r+1, c-1),
+			    (r+2, c-2), (r+3, c-3)]
 
     # list of vertical cases
-	lc_vertic = [(r-3, c), (r-2, c), (r-1, c), (r, c), (r+1, c), (r+2, c), (r+3, c)]
+	lc_vertic = [(r-3, c), (r-2, c), (r-1, c),
+			     (r, c), (r+1, c), (r+2, c), (r+3, c)]
 
 	return is_align4(g, lc_vertic, p) or is_align4(g, lc_diag1, p) or is_align4(g, lc_diag2, p) or is_align4(g, lc_horiz, p)
 
+# Implemantation of the IA
+def is_alea(grid:list)->bool:
+	"""
+		return 
+		:param grid: (list) a grid
+
+		:Exemple:
+		>>> g = initialize_grid(5, 5)
+		>>> l = [0 <= is_alea(g) < nc(g) for i in range(100)]
+		>>> not False in l
+		True
+	"""
+	is_valid_col = False
+	while not is_valid_col:
+		c = random.randint(0, nc(grid))
+		is_valid_col = is_valide_column(c, grid)
+	return c
+
+def unmove(grid:list, c:int)->None:
+    """
+    	modify the grid by reoving the last disc who has been put in the column c.
+        :param grid: (list) the grid
+        :param c: (int) the column
+        :return : (None) moify the grid
+    """
+    r = line_fall_disc(c, grid)
+    grid[r-1][c] = 0
+        
+        
+
 if __name__ == '__main__':
-	import doctest
+	import doctest, time
 	doctest.testmod()
 
 	grid = initialize_grid(10, 10)
-	play(1, 2, grid)
+	play(1, 2, grid, is_ia_player1=True)
 
 	wait_quit()
+	time.sleep(5)
