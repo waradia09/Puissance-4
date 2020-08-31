@@ -82,6 +82,9 @@ def draw_grid4():
   for c in range(nbc):
     canvas.create_text(x,y,text=str(c),width=stepx,anchor=N)
     x+=stepx
+
+  # draw text (line name)
+  
   
   #
   canvas.update()

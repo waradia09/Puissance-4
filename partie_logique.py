@@ -223,6 +223,34 @@ For the game with 2 players, just repeat the steps 2.2 'play one step' and 2.1 '
 For each iteration, we change the player (from player 1 to player 2 or conversely)
 """
 
+def is_full_grid(grid:list)->bool:
+	"""
+		Check if the grid is full:
+		:param grid: (list[list[int]])
+		:return : (bool)
+				  - True if the grid is full
+				  - False if not
+		: CU: None
+
+		:Exemple: 
+		>>> g = [[2,0,0,0],[1,0,0,2],[1,0,2,1]]
+		>>> is_full_grid(g)
+		False
+		>>> g = 	[[1, 1, 1, 2, 2],
+                ...  [2, 1, 1, 2, 1],
+                ...  [1, 2, 2, 2, 1],
+                ...  [2, 1, 2, 1, 2],
+                ...  [1, 2, 2, 1, 1]]
+		>>> is_full_grid(g)
+		True
+
+	"""
+	for r in grid:
+		for c in r:
+			if c == 0:
+				return False
+	return True
+
 def play(p1, p2, grid, is_ia_player1=False, is_ia_player2=False):
 	"""
 		run the gam beatween two humains players
@@ -248,13 +276,17 @@ def play(p1, p2, grid, is_ia_player1=False, is_ia_player2=False):
 			c = enter_column(player, grid)
 		r = line_fall_disc(c, grid)
 		play_one_step(player, grid, c)
-		game_over = is_win(grid, r, c, player)
+		game_over = is_win(grid, r, c, player) or is_full_grid(grid)
 
 		
 		#show_grid(grid) # Affichage dans la console
 		draw_connect4(grid) # Affichage graphique
 		has_played_player1 = not has_played_player1 # permet d'alterner le tour entre les deux joueurs
-	print("Player{} is the winner".format(player))
+		time.sleep(1)
+	if is_full_grid(grid):
+		print("Draw, no winner !!!")
+	else:
+		print("Player{} is the winner".format(player))
 
 
 # 2.5 Winner
@@ -474,6 +506,7 @@ def ia_win(g:list, p:int)->int:
 
 
 	"""
+	list_score_grid = []
 	for c in range(nc(g)):
 		if is_valide_column(c, g):
 			r = line_fall_disc(c, g)
@@ -485,10 +518,14 @@ def ia_win(g:list, p:int)->int:
 				unmove(g, c)
 				return c
 			else:
+				list_score_grid.append((c, score_grid(g, p)))
 				unmove(g, c)
 
 			#print(c, g, '\n')
-	return is_alea(g)
+	
+	# let sort the liste of score to return the column with the higher score
+	list_score_grid.sort(key=lambda x: x[1], reverse=True)
+	return list_score_grid[0][0]
 
 
 # 3.2.2 Evaluation of the grid.
@@ -502,7 +539,7 @@ def ia_win(g:list, p:int)->int:
 
 def score_quadruplet(grid, quadruplet:list, p)->int:
 	"""
-		return the score of the qudruplet
+		return the score of a qudruplet
 		:param grid: 
 		:param quadruplet: (list) list of posiiton (r_i, c_i)
 		:param p: (int) the IA
@@ -563,36 +600,47 @@ def evaluate_score_case(grid:list, case:tuple, p)->int:
 	number_lines = nr(grid)
 	number_columns = nc(grid)
 	score = 0
-	if r + 3 <= number_lines: # vertical bottom quadruplet
+	if r + 3 < number_lines: # vertical bottom quadruplet
 		quadruplet = [(r, c), (r+1, c), (r+2, c), (r+3, c)]
 		score += score_quadruplet(grid, quadruplet, p)
-	if c + 3 <= number_columns: # horizontal right quadruplet
+	if c + 3 < number_columns: # horizontal right quadruplet
 		quadruplet = [(r, c), (r, c+1), (r, c+2), (r, c+3)]
 		score += score_quadruplet(grid, quadruplet, p)
-	if c  >= 3 and r + 3 <= number_lines: # diagonal left quadruplet
+	if c  >= 3 and r + 3 < number_lines: # diagonal left quadruplet
 		quadruplet = [(r, c), (r+1, c-1), (r+2, c-2), (r+3, c-3)]
 		score += score_quadruplet(grid, quadruplet, p)
-	if r + 3 <= number_lines and c + 3 <= number_columns: # diagonal right quadruplet
+	if r + 3 < number_lines and c + 3 < number_columns: # diagonal right quadruplet
 		quadruplet = [(r, c), (r+1, c+1), (r+2, c+2), (r+3, c+3)]
 		score += score_quadruplet(grid, quadruplet, p)
 	return score
 	
-def score_grille(g:list, p:int)->int:
+def score_grid(g:list, p:int)->int:
 	"""
 		return the sum of the scores of the entire grid
 	"""
-	return sum(evaluate_score_case(g, (r, c), p) for r in g for c in r)
+	n_lines = nr(g)
+	n_columns = nc(g)
+
+	return sum(evaluate_score_case(g, (r, c), p) for r in range(n_lines) for c in range(n_columns))
 
 
 
+### 4 Analyse many step in avence
+"""
+	To improve the decision of the IA, it will generate for each of its possibilities all the possibilities that the opponent can play. Then, for each of them, it'll generate again all the possibilites it's can play, etc. So it anticipates howthe game can evolve several steps in advence.
+
+	Let fix the number of steps to generate, and the grid obtained from this number of rounds is evaluated for each possible move.
+"""
+
+# 4.1 Enumeration of all the grids
 
 
 if __name__ == '__main__':
 	import doctest, time
 	doctest.testmod()
 
-	grid = initialize_grid(10, 10)
-	#play(1, 2, grid, is_ia_player1=True)
+	grid = initialize_grid(3, 3)
+	play(1, 2, grid, is_ia_player1=False, is_ia_player2=True)
 	###### Debugage
 	"""
 	grid3 = [[0, 0, 0, 0, 0],
