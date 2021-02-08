@@ -455,7 +455,8 @@ def is_alea(grid:list)->bool:
 ## 3.2 Analyse all the possibilities
 # 3.2.1 Analyse of the victorie
 """
-	To upgrade a little bit the decision of the computer, it'll try every column: it modify the grid by pllaying the column c, then it determin (with the function is_win) if it's a winning shoot.
+	To upgrade a little bit the decision of the computer, it'll try every column: 
+	it modify the grid by pllaying the column c, then it determin (with the function is_win) if it's a winning shoot.
 	If that is the case, it'll choose the current column, otherwise it'll will check the next column.
 
 	Let implemant the function unmove who allows to cancel a computer choose then the function ia_win(g, p)
@@ -485,7 +486,8 @@ def unmove(grid:list, c:int)->None:
         
 def ia_win(g:list, p:int)->int:
 	"""
-		return the column who can help the computer to win the game, if that is not possible, it's return randomly one column.
+		return the column who can help the computer to win the game, if that is not possible, 
+		it's return randomly one column.
 
 		:param g: (list) a grid
 		:param p: (int) a player
@@ -530,11 +532,16 @@ def ia_win(g:list, p:int)->int:
 
 # 3.2.2 Evaluation of the grid.
 """
-	We're still improving the choose of the computer a little bit. This time for each column tried, the IA will analyse the entire grid (not just the victory around the square played).
+	We're still improving the choose of the computer a little bit. 
+	This time for each column tried, the IA will analyse the entire grid (not just the victory around the square played).
 
-	The analysis of the entire grid will result in a score. A hight score will correspond to a 'favorable grid' for an IA unlike a small score. So the IA will try therefore test each of the possible columns (as previously) and choose the one that leads to the most favorable grid (the one with the highest score).
+	The analysis of the entire grid will result in a score. 
+	A hight score will correspond to a 'favorable grid' for an IA unlike a small score. 
+	So the IA will try therefore test each of the possible columns (as previously) and choose the one that leads to the most 
+	favorable grid (the one with the highest score).
 
-	Now, let determinate the the function for the evaluation of the score. A possible strategie is to test all the quadruplets of the possible consecutives cases of the grid. 
+	Now, let determinate the the function for the evaluation of the score. A possible strategie is to test all the quadruplets of 
+	the possible consecutives cases of the grid. 
 """
 
 def score_quadruplet(grid, quadruplet:list, p)->int:
@@ -627,7 +634,9 @@ def score_grid(g:list, p:int)->int:
 
 ### 4 Analyse many step in avence
 """
-	To improve the decision of the IA, it will generate for each of its possibilities all the possibilities that the opponent can play. Then, for each of them, it'll generate again all the possibilites it's can play, etc. So it anticipates howthe game can evolve several steps in advence.
+	To improve the decision of the IA, it will generate for each of its possibilities all the possibilities that the opponent can play. 
+	Then, for each of them, it'll generate again all the possibilites it's can play, etc. 
+	So it anticipates howthe game can evolve several steps in advence.
 
 	Let fix the number of steps to generate, and the grid obtained from this number of rounds is evaluated for each possible move.
 """
